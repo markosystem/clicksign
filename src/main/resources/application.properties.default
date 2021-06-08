@@ -1,0 +1,9 @@
+clicksign.url=https://sandbox.clicksign.com
+clicksign.url_account=/api/v1/accounts
+clicksign.url_signatory=/api/v1/signers
+clicksign.url_documents=/api/v1/documents
+clicksign.url_signatory_in_documents=/api/v1/lists
+clicksign.url_notifications_email=/api/v1/notifications
+clicksign.url_notify_by_whatsapp=/api/v1/notify_by_whatsapp
+clicksign.url_notify_by_sms=/api/v1/notify_by_sms
+clicksign.access_token=${INFORME_TOKEN}
