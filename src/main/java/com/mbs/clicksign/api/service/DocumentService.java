@@ -2,7 +2,6 @@ package com.mbs.clicksign.api.service;
 
 import com.mbs.clicksign.api.controller.AccountController;
 import com.mbs.clicksign.api.model.request.DocumentRequest;
-import com.mbs.clicksign.api.model.response.DocumentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +40,7 @@ public class DocumentService {
         try {
             String url = host + url_document + "/" + key + "?access_token=" + access_token;
             HttpEntity<String> requestEntity = new HttpEntity<>(key);
-            return restTemplate.exchange(url, HttpMethod.GET, requestEntity, DocumentResponse.class);
+            return restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             if ((e.getStatusCode()).equals(HttpStatus.NOT_FOUND)) {
                 log.info("O Documento informado não foi encontrado");
