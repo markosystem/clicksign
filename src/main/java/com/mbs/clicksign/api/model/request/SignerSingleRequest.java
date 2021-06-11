@@ -14,24 +14,24 @@ public class SignerSingleRequest {
     private String name;
     private String documentation;
     private String birthday;
-    private String has_documentation;
-    private String selfie_enabled;
-    private String handwritten_enabled;
-    private String official_document_enabled;
+    private boolean has_documentation;
+    private boolean selfie_enabled;
+    private boolean handwritten_enabled;
+    private boolean official_document_enabled;
 
     @Override
     public String toString() {
-        return "SignerSingle{" +
+        return "SignerSingleRequest{" +
                 "email='" + email + '\'' +
                 ", phone_number='" + phone_number + '\'' +
                 ", auths=" + Arrays.toString(auths) +
                 ", name='" + name + '\'' +
                 ", documentation='" + documentation + '\'' +
                 ", birthday='" + birthday + '\'' +
-                ", has_documentation='" + has_documentation + '\'' +
-                ", selfie_enabled='" + selfie_enabled + '\'' +
-                ", handwritten_enabled='" + handwritten_enabled + '\'' +
-                ", official_document_enabled='" + official_document_enabled + '\'' +
+                ", has_documentation=" + has_documentation +
+                ", selfie_enabled=" + selfie_enabled +
+                ", handwritten_enabled=" + handwritten_enabled +
+                ", official_document_enabled=" + official_document_enabled +
                 '}';
     }
 }

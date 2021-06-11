@@ -3,7 +3,6 @@ Projeto criado para integrar com o gerenciador de assinaturas de documentos on-l
 
 ## Instruções
 Renomear o Arquivo <b>application.properties.default</b> para <b>application.properties</b> e incluir o token da click-sign.<br/>
-https://api-lojavirtual-capitani.herokuapp.com/swagger-ui.html
 <br/><br/>
 
 
