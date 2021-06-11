@@ -3,6 +3,8 @@ package com.mbs.clicksign.api.service;
 import com.mbs.clicksign.api.controller.AccountController;
 import com.mbs.clicksign.api.model.request.SignerDocumentRequest;
 import com.mbs.clicksign.api.model.request.SignerRequest;
+import com.mbs.clicksign.api.model.response.SignerDocumentResponse;
+import com.mbs.clicksign.api.model.response.SignerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,11 +58,11 @@ public class SignatoryService {
         return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<?> insertSignatory(SignerRequest request) {
+    public ResponseEntity<SignerResponse> insertSignatory(SignerRequest request) {
         try {
             String url = host + url_signatory + "?access_token=" + access_token;
             HttpEntity<SignerRequest> requestEntity = new HttpEntity<>(request);
-            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, SignerResponse.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("Ocorreu um Erro na Requisição", e);
         }
@@ -71,7 +73,7 @@ public class SignatoryService {
         try {
             String url = host + url_signatory_in_documents + "?access_token=" + access_token;
             HttpEntity<SignerDocumentRequest> requestEntity = new HttpEntity<>(request);
-            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, SignerDocumentResponse.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("Ocorreu um Erro na Requisição", e);
         }

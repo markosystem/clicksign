@@ -2,6 +2,7 @@ package com.mbs.clicksign.api.service;
 
 import com.mbs.clicksign.api.controller.AccountController;
 import com.mbs.clicksign.api.model.request.DocumentRequest;
+import com.mbs.clicksign.api.model.response.DocumentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class DocumentService {
         try {
             String url = host + url_document + "?access_token=" + access_token;
             HttpEntity<DocumentRequest> requestEntity = new HttpEntity<>(request);
-            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, requestEntity, DocumentResponse.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("Ocorreu um Erro na Requisição", e);
         }

@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.List;
 
 @Service
 public class HomeService {
@@ -32,19 +31,23 @@ public class HomeService {
 
     public ResponseEntity<?> insertAllClickSign(HomeRequest homeRequest) {
         String[] auths = homeRequest.getAuths().split(",");
-        ResponseEntity<List<ResponseEntity>> a = new ResponseEntity<List<ResponseEntity>>;
-        for(String auth : auths){
-            this.insertOneClickSign(homeRequest, auth);
+        //create Document
+        ResponseEntity<?> documentResponse = this.createDocument(homeRequest);
+
+        //create Signatary and Relations with Document
+        for (String auth : auths) {
+            this.insertOneClickSign(homeRequest, auth, (DocumentResponse) documentResponse.getBody());
         }
 
+        return ResponseEntity.ok(Collections.singletonMap("message", "Ok!"));
     }
 
-    public ResponseEntity<?> insertOneClickSign(HomeRequest homeRequest, String auth){
+    public ResponseEntity<?> insertOneClickSign(HomeRequest homeRequest, String auth, DocumentResponse documentResponse) {
         SignerRequest signerRequest = new SignerRequest();
         SignerSingleRequest signerSingleRequest = new SignerSingleRequest();
         signerSingleRequest.setName(homeRequest.getName());
         signerSingleRequest.setEmail(homeRequest.getEmail());
-        signerSingleRequest.setPhone_number(homeRequest.getEmail());
+        signerSingleRequest.setPhone_number(homeRequest.getPhone());
         signerSingleRequest.setAuths(new String[]{auth});
         signerRequest.setSigner(signerSingleRequest);
         signerSingleRequest.setBirthday("1990-11-21");
@@ -60,6 +63,44 @@ public class HomeService {
 
         SignerResponse signerResponse = (SignerResponse) responseSignatary.getBody();
 
+
+        SignerDocumentRequest signerDocumentRequest = new SignerDocumentRequest();
+        SignerDocumentSingleRequest signerDocumentSingleRequest = new SignerDocumentSingleRequest();
+        signerDocumentSingleRequest.setSign_as("sign");
+        signerDocumentSingleRequest.setSigner_key(signerResponse.getSigner().getKey());
+        signerDocumentSingleRequest.setDocument_key(documentResponse.getDocument().getKey());
+        signerDocumentSingleRequest.setMessage(homeRequest.getMessageEmail());
+        signerDocumentRequest.setList(signerDocumentSingleRequest);
+
+        ResponseEntity<?> responseSignataryDocument = this.signatoryService.insertSignatoryInDocument(signerDocumentRequest);
+
+        if (!responseSignataryDocument.getStatusCode().is2xxSuccessful())
+            return ResponseEntity.badRequest().build();
+
+        SignerDocumentResponse signerDocumentResponse = (SignerDocumentResponse) responseSignataryDocument.getBody();
+        String authChosen = signerResponse.getSigner().getAuths()[0];
+
+        if (authChosen.equals("email")) {
+            NotificationEmailRequest notificationEmailRequest = new NotificationEmailRequest();
+            notificationEmailRequest.setMessage(homeRequest.getMessageEmail());
+            notificationEmailRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
+            notificationEmailRequest.setUrl(signerDocumentResponse.getList().getUrl());
+            this.notificationService.notifyEmail(notificationEmailRequest);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado com sucesso via notificação E-mail!"));
+        }
+        if (authChosen.equals("sms") || authChosen.equals("whatsapp")) {
+            NotificationSmsOrWhatsAppRequest notificationSmsOrWhatsAppRequest = new NotificationSmsOrWhatsAppRequest();
+            notificationSmsOrWhatsAppRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
+            if (authChosen.equals("sms"))
+                this.notificationService.notifySms(notificationSmsOrWhatsAppRequest);
+            else
+                this.notificationService.notifyWhatsApp(notificationSmsOrWhatsAppRequest);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado com sucesso via notificação " + (authChosen.equals("sms") ? "SMS!" : "WhatsApp!")));
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    public ResponseEntity<?> createDocument(HomeRequest homeRequest) {
         DocumentRequest documentRequest = new DocumentRequest();
         DocumentSingleRequest documentSingleRequest = new DocumentSingleRequest();
         documentSingleRequest.setPath(homeRequest.getPath());
@@ -75,36 +116,6 @@ public class HomeService {
         if (!responseDocument.getStatusCode().is2xxSuccessful())
             return ResponseEntity.badRequest().build();
 
-        DocumentResponse documentResponse = (DocumentResponse) responseDocument.getBody();
-
-        SignerDocumentRequest signerDocumentRequest = new SignerDocumentRequest();
-        SignerDocumentSingleRequest signerDocumentSingleRequest = new SignerDocumentSingleRequest();
-        signerDocumentSingleRequest.setSign_as("sign");
-        signerDocumentSingleRequest.setSigner_key(signerResponse.getSigner().getKey());
-        signerDocumentSingleRequest.setDocument_key(documentResponse.getDocument().getKey());
-        signerDocumentSingleRequest.setMessage(homeRequest.getMessageEmail());
-
-        ResponseEntity<?> responseSignataryDocument = this.signatoryService.insertSignatoryInDocument(signerDocumentRequest);
-
-        if (!responseSignataryDocument.getStatusCode().is2xxSuccessful())
-            return ResponseEntity.badRequest().build();
-
-        SignerDocumentResponse signerDocumentResponse = (SignerDocumentResponse) responseSignataryDocument.getBody();
-
-        if (signerResponse.getSigner().getAuths().equals("email")) {
-            NotificationEmailRequest notificationEmailRequest = new NotificationEmailRequest();
-            notificationEmailRequest.setMessage(homeRequest.getMessageEmail());
-            notificationEmailRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
-            notificationEmailRequest.setUrl(signerDocumentResponse.getList().getUrl());
-            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado notificação via E-mail com sucesso!"));
-        }
-        if (signerResponse.getSigner().getAuths().equals("sms") || signerResponse.getSigner().getAuths().equals("whastapp")) {
-            NotificationSmsOrWhatsAppRequest notificationSmsOrWhatsAppRequest = new NotificationSmsOrWhatsAppRequest();
-            notificationSmsOrWhatsAppRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
-            this.notificationService.notifySms(notificationSmsOrWhatsAppRequest);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado notificação via SMS/Whatsapp com sucesso!"));
-        }
-        return ResponseEntity.badRequest().build();
+        return responseDocument;
     }
-
 }
