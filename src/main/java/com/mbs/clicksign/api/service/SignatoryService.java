@@ -19,6 +19,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+
 @Service
 public class SignatoryService {
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
@@ -43,9 +45,9 @@ public class SignatoryService {
                 .build();
     }
 
-    public ResponseEntity<?> getSignatory(String key) {
+    public ResponseEntity<?> getSignatory(String key, String access_token) {
         try {
-            String url = host + url_signatory + "/" + key + "?access_token=" + access_token;
+            String url = host + url_signatory + "/" + key + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<String> requestEntity = new HttpEntity<>(key);
             return restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -58,9 +60,9 @@ public class SignatoryService {
         return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<SignerResponse> insertSignatory(SignerRequest request) {
+    public ResponseEntity<SignerResponse> insertSignatory(SignerRequest request, String access_token) {
         try {
-            String url = host + url_signatory + "?access_token=" + access_token;
+            String url = host + url_signatory + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<SignerRequest> requestEntity = new HttpEntity<>(request);
             return restTemplate.exchange(url, HttpMethod.POST, requestEntity, SignerResponse.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -69,9 +71,9 @@ public class SignatoryService {
         return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<?> insertSignatoryInDocument(SignerDocumentRequest request) {
+    public ResponseEntity<?> insertSignatoryInDocument(SignerDocumentRequest request, String access_token) {
         try {
-            String url = host + url_signatory_in_documents + "?access_token=" + access_token;
+            String url = host + url_signatory_in_documents + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<SignerDocumentRequest> requestEntity = new HttpEntity<>(request);
             return restTemplate.exchange(url, HttpMethod.POST, requestEntity, SignerDocumentResponse.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {

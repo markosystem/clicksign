@@ -16,6 +16,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+
 @Service
 public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
@@ -43,9 +45,9 @@ public class NotificationService {
                 .build();
     }
 
-    public boolean notifyEmail(NotificationEmailRequest request) {
+    public boolean notifyEmail(NotificationEmailRequest request, String access_token) {
         try {
-            String url = host + url_notifications_email + "?access_token=" + access_token;
+            String url = host + url_notifications_email + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<NotificationEmailRequest> requestEntity = new HttpEntity<>(request);
             ResponseEntity<String> notificationEmail = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
             if (notificationEmail.getStatusCode().is2xxSuccessful())
@@ -57,9 +59,9 @@ public class NotificationService {
         return false;
     }
 
-    public boolean notifySms(NotificationSmsOrWhatsAppRequest request) {
+    public boolean notifySms(NotificationSmsOrWhatsAppRequest request, String access_token) {
         try {
-            String url = host + url_notify_by_sms + "?access_token=" + access_token;
+            String url = host + url_notify_by_sms + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<NotificationSmsOrWhatsAppRequest> requestEntity = new HttpEntity<>(request);
             ResponseEntity<String> notificationSms = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
             if (notificationSms.getStatusCode().is2xxSuccessful())
@@ -71,9 +73,9 @@ public class NotificationService {
         return false;
     }
 
-    public boolean notifyWhatsApp(NotificationSmsOrWhatsAppRequest request) {
+    public boolean notifyWhatsApp(NotificationSmsOrWhatsAppRequest request, String access_token) {
         try {
-            String url = host + url_notify_by_whatsapp + "?access_token=" + access_token;
+            String url = host + url_notify_by_whatsapp + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<NotificationSmsOrWhatsAppRequest> request2 = new HttpEntity<>(request);
             ResponseEntity<String> notificationWhatsApp = restTemplate.exchange(url, HttpMethod.POST, request2, String.class);
             if (notificationWhatsApp.getStatusCode().is2xxSuccessful())

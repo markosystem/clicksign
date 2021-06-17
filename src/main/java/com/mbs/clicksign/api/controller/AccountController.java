@@ -21,7 +21,7 @@ public class AccountController {
     private AccountService service;
 
     @ApiOperation(value = "Função que verifica a chave Privada da ClickSign")
-    @RequestMapping(value = "/account", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/account", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAccount(@RequestParam String access_token) {
         ResponseEntity<?> response = service.getAccount(access_token);
         if (!response.getStatusCode().is2xxSuccessful())

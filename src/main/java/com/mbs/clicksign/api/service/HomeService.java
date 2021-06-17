@@ -29,20 +29,22 @@ public class HomeService {
         this.notificationService = notificationService;
     }
 
-    public ResponseEntity<?> insertAllClickSign(HomeRequest homeRequest) {
+    public ResponseEntity<?> insertAllClickSign(HomeRequest homeRequest, String access_token) {
         String[] auths = homeRequest.getAuths().split(",");
         //create Document
-        ResponseEntity<?> documentResponse = this.createDocument(homeRequest);
+        ResponseEntity<?> documentResponse = this.createDocument(homeRequest, access_token);
+        if (!documentResponse.getStatusCode().is2xxSuccessful())
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Houve um erro e não foi possível criar o Documento!"));
 
-        //create Signatary and Relations with Document
+        //create Signatary and Relations with Document and send Notification
         for (String auth : auths) {
-            this.insertOneClickSign(homeRequest, auth, (DocumentResponse) documentResponse.getBody());
+            this.insertOneClickSign(homeRequest, auth, (DocumentResponse) documentResponse.getBody(), access_token);
         }
 
-        return ResponseEntity.ok(Collections.singletonMap("message", "Ok!"));
+        return ResponseEntity.ok(Collections.singletonMap("message", "Operação realizada com sucesso!"));
     }
 
-    public ResponseEntity<?> insertOneClickSign(HomeRequest homeRequest, String auth, DocumentResponse documentResponse) {
+    public ResponseEntity<?> insertOneClickSign(HomeRequest homeRequest, String auth, DocumentResponse documentResponse, String access_token) {
         SignerRequest signerRequest = new SignerRequest();
         SignerSingleRequest signerSingleRequest = new SignerSingleRequest();
         signerSingleRequest.setName(homeRequest.getName());
@@ -57,12 +59,11 @@ public class HomeService {
         signerSingleRequest.setHandwritten_enabled(false);
         signerSingleRequest.setOfficial_document_enabled(false);
 
-        ResponseEntity<?> responseSignatary = this.signatoryService.insertSignatory(signerRequest);
+        ResponseEntity<?> responseSignatary = this.signatoryService.insertSignatory(signerRequest, access_token);
         if (!responseSignatary.getStatusCode().is2xxSuccessful())
             return ResponseEntity.badRequest().build();
 
         SignerResponse signerResponse = (SignerResponse) responseSignatary.getBody();
-
 
         SignerDocumentRequest signerDocumentRequest = new SignerDocumentRequest();
         SignerDocumentSingleRequest signerDocumentSingleRequest = new SignerDocumentSingleRequest();
@@ -72,7 +73,7 @@ public class HomeService {
         signerDocumentSingleRequest.setMessage(homeRequest.getMessageEmail());
         signerDocumentRequest.setList(signerDocumentSingleRequest);
 
-        ResponseEntity<?> responseSignataryDocument = this.signatoryService.insertSignatoryInDocument(signerDocumentRequest);
+        ResponseEntity<?> responseSignataryDocument = this.signatoryService.insertSignatoryInDocument(signerDocumentRequest, access_token);
 
         if (!responseSignataryDocument.getStatusCode().is2xxSuccessful())
             return ResponseEntity.badRequest().build();
@@ -80,27 +81,10 @@ public class HomeService {
         SignerDocumentResponse signerDocumentResponse = (SignerDocumentResponse) responseSignataryDocument.getBody();
         String authChosen = signerResponse.getSigner().getAuths()[0];
 
-        if (authChosen.equals("email")) {
-            NotificationEmailRequest notificationEmailRequest = new NotificationEmailRequest();
-            notificationEmailRequest.setMessage(homeRequest.getMessageEmail());
-            notificationEmailRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
-            notificationEmailRequest.setUrl(signerDocumentResponse.getList().getUrl());
-            this.notificationService.notifyEmail(notificationEmailRequest);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado com sucesso via notificação E-mail!"));
-        }
-        if (authChosen.equals("sms") || authChosen.equals("whatsapp")) {
-            NotificationSmsOrWhatsAppRequest notificationSmsOrWhatsAppRequest = new NotificationSmsOrWhatsAppRequest();
-            notificationSmsOrWhatsAppRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
-            if (authChosen.equals("sms"))
-                this.notificationService.notifySms(notificationSmsOrWhatsAppRequest);
-            else
-                this.notificationService.notifyWhatsApp(notificationSmsOrWhatsAppRequest);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado com sucesso via notificação " + (authChosen.equals("sms") ? "SMS!" : "WhatsApp!")));
-        }
-        return ResponseEntity.badRequest().build();
+        return sendNotification(authChosen, homeRequest, signerDocumentResponse, access_token);
     }
 
-    public ResponseEntity<?> createDocument(HomeRequest homeRequest) {
+    public ResponseEntity<?> createDocument(HomeRequest homeRequest, String access_token) {
         DocumentRequest documentRequest = new DocumentRequest();
         DocumentSingleRequest documentSingleRequest = new DocumentSingleRequest();
         documentSingleRequest.setPath(homeRequest.getPath());
@@ -111,11 +95,32 @@ public class HomeService {
         documentSingleRequest.setSequence_enabled(false);
         documentRequest.setDocument(documentSingleRequest);
 
-        ResponseEntity<?> responseDocument = this.documentService.insertDocument(documentRequest);
+        ResponseEntity<?> responseDocument = this.documentService.insertDocument(documentRequest, access_token);
 
         if (!responseDocument.getStatusCode().is2xxSuccessful())
             return ResponseEntity.badRequest().build();
 
         return responseDocument;
+    }
+
+    public ResponseEntity<?> sendNotification(String authChosen, HomeRequest homeRequest, SignerDocumentResponse signerDocumentResponse, String access_token) {
+        if (authChosen.equals("email")) {
+            NotificationEmailRequest notificationEmailRequest = new NotificationEmailRequest();
+            notificationEmailRequest.setMessage(homeRequest.getMessageEmail());
+            notificationEmailRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
+            notificationEmailRequest.setUrl(signerDocumentResponse.getList().getUrl());
+            this.notificationService.notifyEmail(notificationEmailRequest, access_token);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado com sucesso via notificação E-mail!"));
+        }
+        if (authChosen.equals("sms") || authChosen.equals("whatsapp")) {
+            NotificationSmsOrWhatsAppRequest notificationSmsOrWhatsAppRequest = new NotificationSmsOrWhatsAppRequest();
+            notificationSmsOrWhatsAppRequest.setRequest_signature_key(signerDocumentResponse.getList().getRequest_signature_key());
+            if (authChosen.equals("sms"))
+                this.notificationService.notifySms(notificationSmsOrWhatsAppRequest, access_token);
+            else
+                this.notificationService.notifyWhatsApp(notificationSmsOrWhatsAppRequest, access_token);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Documento Registrado e enviado com sucesso via notificação " + (authChosen.equals("sms") ? "SMS!" : "WhatsApp!")));
+        }
+        return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Houve um problema ao utilizar o Serviço, favor verificar o log e tente novamente!"));
     }
 }

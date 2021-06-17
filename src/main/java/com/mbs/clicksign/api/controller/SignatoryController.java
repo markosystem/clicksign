@@ -20,8 +20,8 @@ public class SignatoryController {
 
     @ApiOperation(value = "Função que visualiza um Signatário na ClickSign")
     @RequestMapping(value = "/viewSignatory", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getSignatory(@RequestParam String key) {
-        ResponseEntity<?> response = service.getSignatory(key);
+    public ResponseEntity<?> getSignatory(@RequestParam String key, @RequestParam(required = false) String access_token) {
+        ResponseEntity<?> response = service.getSignatory(key, access_token);
 
         if (response.getStatusCode().equals(HttpStatus.NOT_FOUND))
             return ResponseEntity.notFound().build();
@@ -34,8 +34,8 @@ public class SignatoryController {
 
     @ApiOperation(value = "Função que cria um Signatário na ClickSign")
     @RequestMapping(value = "/createSignatory", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> insertSignatory(@RequestBody SignerRequest request) {
-        ResponseEntity<?> response = service.insertSignatory(request);
+    public ResponseEntity<?> insertSignatory(@RequestBody SignerRequest request, @RequestParam(required = false) String access_token) {
+        ResponseEntity<?> response = service.insertSignatory(request, access_token);
         if (!response.getStatusCode().is2xxSuccessful())
             return ResponseEntity.badRequest().body(response.getBody());
         return ResponseEntity.ok(response.getBody());
@@ -43,8 +43,8 @@ public class SignatoryController {
 
     @ApiOperation(value = "Função que adiciona um Signatário em um Documento na ClickSign")
     @RequestMapping(value = "/createSignatoryInDocument", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> insertSignatoryInDocument(@RequestBody SignerDocumentRequest request) {
-        ResponseEntity<?> response = service.insertSignatoryInDocument(request);
+    public ResponseEntity<?> insertSignatoryInDocument(@RequestBody SignerDocumentRequest request, @RequestParam(required = false) String access_token) {
+        ResponseEntity<?> response = service.insertSignatoryInDocument(request, access_token);
         if (!response.getStatusCode().is2xxSuccessful())
             return ResponseEntity.badRequest().body(response.getBody());
         return ResponseEntity.ok(response.getBody());

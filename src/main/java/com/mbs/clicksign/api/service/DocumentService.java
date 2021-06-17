@@ -17,6 +17,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+
 @Service
 public class DocumentService {
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
@@ -37,11 +39,10 @@ public class DocumentService {
         restTemplate = restTemplateBuilder.build();
     }
 
-    public ResponseEntity<?> getDocument(String key) {
+    public ResponseEntity<?> getDocument(String key, String access_token) {
         try {
-            String url = host + url_document + "/" + key + "?access_token=" + access_token;
-            HttpEntity<String> requestEntity = new HttpEntity<>(key);
-            return restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+            String url = host + url_document + "/" + key + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
+            return restTemplate.exchange(url, HttpMethod.GET, null, String.class);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             if ((e.getStatusCode()).equals(HttpStatus.NOT_FOUND)) {
                 log.info("O Documento informado não foi encontrado");
@@ -52,11 +53,22 @@ public class DocumentService {
         return ResponseEntity.badRequest().build();
     }
 
-    public ResponseEntity<?> insertDocument(DocumentRequest request) {
+    public ResponseEntity<?> insertDocument(DocumentRequest request, String access_token) {
         try {
-            String url = host + url_document + "?access_token=" + access_token;
+            String url = host + url_document + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
             HttpEntity<DocumentRequest> requestEntity = new HttpEntity<>(request);
             return restTemplate.exchange(url, HttpMethod.POST, requestEntity, DocumentResponse.class);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Ocorreu um Erro na Requisição", e);
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    public ResponseEntity<?> cancelDocument(String key, String access_token) {
+        try {
+            String url = host + url_document + "/" + key + "/cancel" + "?access_token=" + ((Objects.nonNull(access_token) && access_token.length() == 36) ? access_token : this.access_token);
+            String r = restTemplate.patchForObject(url, null, String.class);
+            return ResponseEntity.badRequest().build();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             log.error("Ocorreu um Erro na Requisição", e);
         }
