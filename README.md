@@ -2,9 +2,6 @@
 Projeto criado para integrar com o gerenciador de assinaturas de documentos on-line ClickSign.
 
 ## Instruções
-Renomear o Arquivo <b>application.properties.default</b> para <b>application.properties</b> e incluir o token da click-sign.<br/>
-<br/><br/>
-
 
 Startar o Projeto Local (com maven instalado)<br/>
 ```
